@@ -47,13 +47,16 @@ class PaddedToJaggedTensor(Function):
         target._offsets = torch.empty(len(lengths)+1, dtype=x.dtype, device=x.device, requires_grad=x.requires_grad)
         target._metadata_cache = {}
 
+        # Round BLOCK_SIZE_D up to next power of 2 for Triton arange requirement
+        block_size_d = 1 << (D - 1).bit_length() if D > 0 else 1
+        
         grid = lambda meta: (B*triton.cdiv(N, meta['BLOCK_SIZE_N']), triton.cdiv(D, meta['BLOCK_SIZE_D']),)
 
         _padded_to_jagged_kernel[grid](
             x, lengths, offsets,
             target._values, target._offsets,
             x.stride(0), x.stride(1), x.stride(2), target._values.stride(0),
-            B, N, D, BLOCK_SIZE_N=32, BLOCK_SIZE_D=D
+            B, N, D, BLOCK_SIZE_N=32, BLOCK_SIZE_D=block_size_d
         )
 
         # Hack: Fixes autograd failure:
@@ -102,7 +105,8 @@ def _padded_to_jagged_kernel(
     BLOCK_SIZE_N: tl.constexpr,
     BLOCK_SIZE_D: tl.constexpr,
 ):
-    assert BLOCK_SIZE_D == D
+    # BLOCK_SIZE_D is padded to a power of 2, but must be >= D
+    assert BLOCK_SIZE_D >= D
     pid_n = tl.program_id(0)
     num_pids_n = tl.cdiv(N, BLOCK_SIZE_N)
 

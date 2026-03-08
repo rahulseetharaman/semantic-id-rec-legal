@@ -107,7 +107,7 @@ class SemanticIdTokenizer(nn.Module):
             raise Exception("No match can be found in empty cache.")
 
         prefix_length = sem_id_prefix.shape[-1]
-        prefix_cache = self.cached_ids[:, :prefix_length]
+        prefix_cache = self.cached_ids[:, :prefix_length].to(sem_id_prefix.device)
         out = torch.zeros(*sem_id_prefix.shape[:-1], dtype=bool, device=sem_id_prefix.device)
         
         # Batch prefixes matching to avoid OOM. 
@@ -120,7 +120,15 @@ class SemanticIdTokenizer(nn.Module):
         return out
     
     def _tokenize_seq_batch_from_cached(self, ids: Tensor) -> Tensor:
-        return rearrange(self.cached_ids[ids.flatten(), :], "(b n) d -> b (n d)", n=ids.shape[1])
+        # Handle both 1D (B,) and 2D (B, N) inputs
+        original_shape = ids.shape
+        if ids.dim() == 1:
+            ids = ids.unsqueeze(1)
+        
+        # Ensure cached_ids is on the same device as ids
+        cached_ids = self.cached_ids.to(ids.device)
+        result = rearrange(cached_ids[ids.flatten(), :], "(b n) d -> b (n d)", n=ids.shape[1])
+        return result
     
     @torch.no_grad
     @eval_mode

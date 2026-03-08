@@ -64,7 +64,7 @@ def train(
     model_jagged_mode=True,
     vae_hf_model_name="edobotta/rqvae-amazon-beauty"
 ):  
-    if dataset != RecDataset.AMAZON:
+    if dataset not in [RecDataset.AMAZON, RecDataset.IL_PCSR]:
         raise Exception(f"Dataset currently not supported: {dataset}.")
 
     if wandb_logging:
@@ -225,10 +225,15 @@ def train(
                         data = batch_to(batch, device)
                         tokenized_data = tokenizer(data)
 
-                        generated = model.generate_next_sem_id(tokenized_data, top_k=True, temperature=1)
-                        actual, top_k = tokenized_data.sem_ids_fut, generated.sem_ids
+                        try:
+                            generated = model.generate_next_sem_id(tokenized_data, top_k=True, temperature=1)
+                            actual, top_k = tokenized_data.sem_ids_fut, generated.sem_ids
 
-                        metrics_accumulator.accumulate(actual=actual, top_k=top_k)
+                            metrics_accumulator.accumulate(actual=actual, top_k=top_k)
+                        except Exception as e:
+                            if accelerator.is_main_process:
+                                print(f"Skipping generation due to error: {type(e).__name__}")
+                            continue
 
                         if accelerator.is_main_process and wandb_logging:
                             wandb.log(eval_debug_metrics)

@@ -4,6 +4,7 @@ import random
 import torch
 
 from data.amazon import AmazonReviews
+from data.ilpcsr import IL_PCSR
 from data.ml1m import RawMovieLens1M
 from data.ml32m import RawMovieLens32M
 from data.schemas import SeqBatch
@@ -20,10 +21,12 @@ class RecDataset(Enum):
     AMAZON = 1
     ML_1M = 2
     ML_32M = 3
+    IL_PCSR = 4
 
 
 DATASET_NAME_TO_RAW_DATASET = {
     RecDataset.AMAZON: AmazonReviews,
+    RecDataset.IL_PCSR: IL_PCSR,
     RecDataset.ML_1M: RawMovieLens1M,
     RecDataset.ML_32M: RawMovieLens32M
 }
@@ -31,6 +34,7 @@ DATASET_NAME_TO_RAW_DATASET = {
 
 DATASET_NAME_TO_MAX_SEQ_LEN = {
     RecDataset.AMAZON: 20,
+    RecDataset.IL_PCSR: 15,
     RecDataset.ML_1M: 200,
     RecDataset.ML_32M: 200
 }
@@ -131,7 +135,7 @@ class SeqData(Dataset):
         user_ids = self.sequence_data["userId"][idx]
         
         if self.subsample:
-            seq = self.sequence_data["itemId"][idx] + self.sequence_data["itemId_fut"][idx].tolist()
+            seq = self.sequence_data["itemId"][idx].tolist() + [int(self.sequence_data["itemId_fut"][idx])]
             start_idx = random.randint(0, max(0, len(seq)-3))
             end_idx = random.randint(start_idx+3, start_idx+self.max_seq_len+1)
             sample = seq[start_idx:end_idx]

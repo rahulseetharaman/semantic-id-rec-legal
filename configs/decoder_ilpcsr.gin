@@ -1,0 +1,29 @@
+import data.processed
+
+# IL-PCSR Precedent Retrieval Decoder Training Configuration
+train.iterations=10000
+train.batch_size=64
+train.learning_rate=0.0001
+train.weight_decay=0.01
+train.vae_input_dim=768
+train.vae_hidden_dims=[512, 256, 128]
+train.vae_embed_dim=32
+train.vae_codebook_size=256
+train.vae_n_cat_feats=0
+train.vae_n_layers=3
+train.vae_codebook_normalize=False
+train.vae_sim_vq=False
+train.decoder_embed_dim=128
+train.dropout_p=0.1
+train.attn_heads=6
+train.attn_embed_dim=384
+train.attn_layers=8
+train.wandb_logging=False
+train.pretrained_rqvae_path="out/rqvae/ilpcsr/checkpoint_49999.pt"
+train.save_dir_root="out/decoder/ilpcsr/"
+train.dataset_folder="dataset/ilpcsr"
+train.dataset=%data.processed.RecDataset.IL_PCSR
+train.force_dataset_process=False
+train.save_model_every=2500
+train.partial_eval_every=1000
+train.full_eval_every=10000

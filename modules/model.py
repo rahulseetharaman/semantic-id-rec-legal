@@ -112,7 +112,7 @@ class EncoderDecoderRetrievalModel(nn.Module):
         pos = torch.arange(N, device=sem_ids_emb.device).unsqueeze(0)
         wpe = self.wpe(pos)
 
-        input_embedding = torch.cat([user_emb, wpe + sem_ids_emb], axis=1)
+        input_embedding = torch.cat([user_emb.unsqueeze(1), wpe + sem_ids_emb], axis=1)
         input_embedding_fut = self.bos_emb.repeat(B, 1, 1)
         if sem_ids_emb_fut is not None:
             tte_fut = self.tte(batch.token_type_ids_fut)
