@@ -7,6 +7,7 @@ from data.amazon import AmazonReviews
 from data.ilpcsr import IL_PCSR
 from data.ml1m import RawMovieLens1M
 from data.ml32m import RawMovieLens32M
+from data.sci import SCI
 from data.schemas import SeqBatch
 from enum import Enum
 from torch import Tensor
@@ -22,11 +23,13 @@ class RecDataset(Enum):
     ML_1M = 2
     ML_32M = 3
     IL_PCSR = 4
+    SCI = 5
 
 
 DATASET_NAME_TO_RAW_DATASET = {
     RecDataset.AMAZON: AmazonReviews,
     RecDataset.IL_PCSR: IL_PCSR,
+    RecDataset.SCI: SCI,
     RecDataset.ML_1M: RawMovieLens1M,
     RecDataset.ML_32M: RawMovieLens32M
 }
@@ -35,6 +38,7 @@ DATASET_NAME_TO_RAW_DATASET = {
 DATASET_NAME_TO_MAX_SEQ_LEN = {
     RecDataset.AMAZON: 20,
     RecDataset.IL_PCSR: 15,
+    RecDataset.SCI: 15,
     RecDataset.ML_1M: 200,
     RecDataset.ML_32M: 200
 }
